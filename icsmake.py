@@ -55,6 +55,7 @@ def parse_html(cachefilename="event.html", exclude_before=None, tz=""):
 		endtime = date + " " + timerange[1]
 
 		starttime = dateparser.parse(starttime)
+		print("processing event starting at:", starttime)
 		endtime = dateparser.parse(endtime)
 		e.begin = tz.localize(starttime)
 		e.end = tz.localize(endtime)
@@ -70,6 +71,8 @@ def parse_html(cachefilename="event.html", exclude_before=None, tz=""):
 		print(exclude_before)
 		if exclude_before and starttime > exclude_before:
 			c.events.add(e)
+		else:
+			print("\texcluded due to date filter")
 		
 	return c
 	
