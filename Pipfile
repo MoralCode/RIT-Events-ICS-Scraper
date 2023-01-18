@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 ics = "*"
 beautifulsoup4 = "*"
+requests = "*"
 
 [dev-packages]
 
