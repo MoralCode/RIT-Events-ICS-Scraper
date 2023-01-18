@@ -74,7 +74,8 @@ if __name__ == "__main__":
 						help='the url of the page to parse')
 	parser.add_argument('--cachefile',
 						help='the file to store the page HTML in, used for testing')
-
+	parser.add_argument('--output', default="calendar.ics",
+						help='the filename to store the ics file in')
 	args = parser.parse_args()
 
 	if args.cachefile:
@@ -87,7 +88,7 @@ if __name__ == "__main__":
 
 		calendar = parse_html()
 
-	with open('calendar.ics', 'w') as my_file:
+	with open(args.output, 'w') as my_file:
 		my_file.writelines(calendar.serialize_iter())
 
 	# if cache was not user specified, remove it, it is temporary 
