@@ -4,6 +4,8 @@ import argparse
 import requests
 from pathlib import Path
 from dateutil import parser as dateparser
+from pytz import timezone
+import pytz
 
 
 
@@ -16,7 +18,7 @@ def fetch_html(url, cachefilename="event.html"):
 		with htmlfile.open("w") as f:
 			f.write(response.text)
 
-def parse_html(cachefilename="event.html", exclude_before=None):
+def parse_html(cachefilename="event.html", exclude_before=None, tz=""):
 
 	exclude_before = dateparser.parse(exclude_before) or None
 	htmlfile = Path(cachefilename)
@@ -28,6 +30,7 @@ def parse_html(cachefilename="event.html", exclude_before=None):
 	# parse details that are the same for every event
 	name = soup.find(attrs={'class': "field--name-title"}).get_text().strip()
 	description = soup.find(attrs={'class': "field--name-field-event-description"}).get_text().strip()
+	tz = timezone(tz)
 
 	for event_html in soup.find_all(attrs={'class': "paragraph--type--event-schedule"}):
 
@@ -53,8 +56,8 @@ def parse_html(cachefilename="event.html", exclude_before=None):
 
 		starttime = dateparser.parse(starttime)
 		endtime = dateparser.parse(endtime)
-		e.begin = starttime
-		e.end = endtime
+		e.begin = tz.localize(starttime)
+		e.end = tz.localize(endtime)
 
 		location = items[2].get_text()
 		room = items[3].get_text()
@@ -62,6 +65,9 @@ def parse_html(cachefilename="event.html", exclude_before=None):
 		location = location.strip() + " - " + room
 		
 		e.location = location
+		print(e.begin)
+		print(starttime)
+		print(exclude_before)
 		if exclude_before and starttime > exclude_before:
 			c.events.add(e)
 		
@@ -80,6 +86,7 @@ if __name__ == "__main__":
 						help='the file to store the page HTML in, used for testing')
 	parser.add_argument('--exclude-before',
 						help='exclude events happening before a certain date. Example: "2023-01-01"')
+	parser.add_argument("--timezone", default="US/Eastern", help="the timezone to use if none is available in the source")
 	parser.add_argument('--output', default="calendar.ics",
 						help='the filename to store the ics file in')
 	args = parser.parse_args()
@@ -92,7 +99,7 @@ if __name__ == "__main__":
 	else:
 		fetch_html(args.url)
 
-		calendar = parse_html(exclude_before=args.exclude_before)
+		calendar = parse_html(exclude_before=args.exclude_before, tz=args.timezone)
 
 	with open(args.output, 'w') as my_file:
 		my_file.writelines(calendar.serialize_iter())
