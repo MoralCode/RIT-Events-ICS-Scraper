@@ -16,7 +16,9 @@ def fetch_html(url, cachefilename="event.html"):
 		with htmlfile.open("w") as f:
 			f.write(response.text)
 
-def parse_html(cachefilename="event.html"):
+def parse_html(cachefilename="event.html", exclude_before=None):
+
+	exclude_before = dateparser.parse(exclude_before) or None
 	htmlfile = Path(cachefilename)
 	html = htmlfile.read_text()
 	soup = BeautifulSoup(html, features="html.parser")
@@ -49,8 +51,10 @@ def parse_html(cachefilename="event.html"):
 		starttime = date + " " + timerange[0]
 		endtime = date + " " + timerange[1]
 
-		e.begin = dateparser.parse(starttime)
-		e.end = dateparser.parse(endtime)
+		starttime = dateparser.parse(starttime)
+		endtime = dateparser.parse(endtime)
+		e.begin = starttime
+		e.end = endtime
 
 		location = items[2].get_text()
 		room = items[3].get_text()
@@ -58,8 +62,8 @@ def parse_html(cachefilename="event.html"):
 		location = location.strip() + " - " + room
 		
 		e.location = location
-
-		c.events.add(e)
+		if exclude_before and starttime > exclude_before:
+			c.events.add(e)
 		
 	return c
 	
@@ -74,6 +78,8 @@ if __name__ == "__main__":
 						help='the url of the page to parse')
 	parser.add_argument('--cachefile',
 						help='the file to store the page HTML in, used for testing')
+	parser.add_argument('--exclude-before',
+						help='exclude events happening before a certain date. Example: "2023-01-01"')
 	parser.add_argument('--output', default="calendar.ics",
 						help='the filename to store the ics file in')
 	args = parser.parse_args()
@@ -86,7 +92,7 @@ if __name__ == "__main__":
 	else:
 		fetch_html(args.url)
 
-		calendar = parse_html()
+		calendar = parse_html(exclude_before=args.exclude_before)
 
 	with open(args.output, 'w') as my_file:
 		my_file.writelines(calendar.serialize_iter())
