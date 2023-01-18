@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import argparse
 import requests
 from pathlib import Path
+from dateutil import parser as dateparser
 
 
 
@@ -18,20 +19,48 @@ def fetch_html(url, cachefilename="index.html"):
 def parse_html(cachefilename="index.html"):
 	htmlfile = Path(cachefilename)
 	html = htmlfile.read_text()
-	soup = BeautifulSoup(html)
+	soup = BeautifulSoup(html, features="html.parser")
 
 	c = Calendar()
-	e = Event()
 
+	# parse details that are the same for every event
+	name = soup.find(attrs={'class': "field--name-title"}).get_text().strip()
+	description = soup.find(attrs={'class': "field--name-field-event-description"}).get_text().strip()
 
+	for event_html in soup.find_all(attrs={'class': "paragraph--type--event-schedule"}):
 
+		
+		e = Event()
+		e.name = name
+		e.description = description
 
-	e.name = "My cool event"
-	e.begin = '2014-01-01 00:00:00'
-	e.description = soup.find_all(_class="field--name-field-event-description")
-	print(soup.find_all(_class="field--name-field-event-description").text)
-	c.events.add(e)
-	
+		items = list(event_html.find_all("div"))
+		# # debug
+		# for i in range(len(items)):
+		# 	txt = items[i].get_text()
+		# 	txt = txt.strip()
+		# 	if txt != "":
+		# 		print(i, txt)
+
+		date = items[0].get_text()
+		timerange = items[1].get_text()
+		timerange = timerange.split("-")
+
+		starttime = date + " " + timerange[0]
+		endtime = date + " " + timerange[1]
+
+		e.begin = dateparser.parse(starttime)
+		e.end = dateparser.parse(endtime)
+
+		location = items[2].get_text()
+		room = items[3].get_text()
+		room = room.split(":")[1].strip()
+		location = location.strip() + " - " + room
+		
+		e.location = location
+
+		c.events.add(e)
+		
 	return c
 	
 
@@ -50,7 +79,7 @@ if __name__ == "__main__":
 
 	fetch_html(args.url, cachefilename=args.cachefile)
 
-	calendar = parse_html()
+	calendar = parse_html(cachefilename=args.cachefile)
 
 	with open('calendar.ics', 'w') as my_file:
 		my_file.writelines(calendar.serialize_iter())
