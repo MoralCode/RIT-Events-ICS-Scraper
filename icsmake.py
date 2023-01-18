@@ -103,5 +103,5 @@ if __name__ == "__main__":
 		my_file.writelines(calendar.serialize_iter())
 
 	# if cache was not user specified, remove it, it is temporary 
-	if args.cachefile:
-		htmlfile.unlink()
+	if not args.cachefile:
+		Path(args.cachefile).unlink()
