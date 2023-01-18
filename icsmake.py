@@ -20,7 +20,7 @@ def fetch_html(url, cachefilename="event.html"):
 
 def parse_html(cachefilename="event.html", exclude_before=None, tz=""):
 
-	exclude_before = dateparser.parse(exclude_before) or None
+	exclude_before = dateparser.parse(exclude_before) if exclude_before is not None else None
 	htmlfile = Path(cachefilename)
 	html = htmlfile.read_text()
 	soup = BeautifulSoup(html, features="html.parser")
