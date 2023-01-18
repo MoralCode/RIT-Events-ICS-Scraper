@@ -7,7 +7,7 @@ from dateutil import parser as dateparser
 
 
 
-def fetch_html(url, cachefilename="index.html"):
+def fetch_html(url, cachefilename="event.html"):
 	htmlfile = Path(cachefilename)
 
 	if not htmlfile.exists():
@@ -16,7 +16,7 @@ def fetch_html(url, cachefilename="index.html"):
 		with htmlfile.open("w") as f:
 			f.write(response.text)
 
-def parse_html(cachefilename="index.html"):
+def parse_html(cachefilename="event.html"):
 	htmlfile = Path(cachefilename)
 	html = htmlfile.read_text()
 	soup = BeautifulSoup(html, features="html.parser")
@@ -77,13 +77,19 @@ if __name__ == "__main__":
 
 	args = parser.parse_args()
 
-	fetch_html(args.url, cachefilename=args.cachefile)
+	if args.cachefile:
+		fetch_html(args.url, cachefilename=args.cachefile)
 
-	calendar = parse_html(cachefilename=args.cachefile)
+		calendar = parse_html(cachefilename=args.cachefile)
+
+	else:
+		fetch_html(args.url)
+
+		calendar = parse_html()
 
 	with open('calendar.ics', 'w') as my_file:
 		my_file.writelines(calendar.serialize_iter())
 
 	# if cache was not user specified, remove it, it is temporary 
-	if not args.cachefile:
+	if args.cachefile:
 		htmlfile.unlink()
