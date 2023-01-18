@@ -94,15 +94,10 @@ if __name__ == "__main__":
 						help='the filename to store the ics file in')
 	args = parser.parse_args()
 
-	if args.cachefile:
-		fetch_html(args.url, cachefilename=args.cachefile)
+	fetch_html(args.url, cachefilename=args.cachefile or "event.html")
+	
+	calendar = parse_html(cachefilename=args.cachefile or "event.html", exclude_before=args.exclude_before, tz=args.timezone)
 
-		calendar = parse_html(cachefilename=args.cachefile)
-
-	else:
-		fetch_html(args.url)
-
-		calendar = parse_html(exclude_before=args.exclude_before, tz=args.timezone)
 
 	with open(args.output, 'w') as my_file:
 		my_file.writelines(calendar.serialize_iter())
