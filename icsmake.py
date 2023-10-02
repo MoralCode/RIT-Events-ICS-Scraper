@@ -66,9 +66,6 @@ def parse_html(cachefilename="event.html", exclude_before=None, tz=""):
 		location = location.strip() + " - " + room
 		
 		e.location = location
-		print(e.begin)
-		print(starttime)
-		print(exclude_before)
 		if exclude_before and starttime > exclude_before:
 			c.events.add(e)
 		else:
