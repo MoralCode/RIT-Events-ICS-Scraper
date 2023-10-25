@@ -83,7 +83,7 @@ if __name__ == "__main__":
 	parser.add_argument('url',
 						help='the url of the page to parse')
 	parser.add_argument('--cachefile',
-						help='the file to store the page HTML in, used for testing')
+						help='the file to store the page HTML in, used for testing', default="cache.html")
 	parser.add_argument('--exclude-before',
 						help='exclude events happening before a certain date. Example: "2023-01-01"')
 	parser.add_argument("--timezone", default="US/Eastern", help="the timezone to use if none is available in the source")
